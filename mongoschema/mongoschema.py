@@ -1,6 +1,3 @@
-import sys
-import json
-from pymongo import MongoClient
 from collections import defaultdict
 from prettytable import PrettyTable
 
@@ -9,65 +6,23 @@ class Schema(object):
 
     "Gets the schema of a MongoDB collection"
 
-    DEFAULT_MONGO_URI = 'mongodb://localhost:27017/'
-    DEFAULT_PORT = 27017
-
-    def __init__(self, db_name, collection_name, where_dict={}, limit=0, mongo_uri=DEFAULT_MONGO_URI, host=None, port=None):
+    def __init__(self, collection, where_dict={}, limit=0):
         """
-                Initializes Mongo Credentials given by user
+                Initializes Schema for a given collection
 
-                :param db_name: Name of the database
-                :type  db_name: string
-
-                :param collection_name: Name of the collection
-                :type  collection_name: string
+                :param collection: The collection instance
+                :type  collection: pymongo.collection.Collection
 
                 :param where_dict: Filters (specific fields/value ranges etc.)
                 :type  where_dict: dictionary
-
-                :param mongo_uri: Mongo Server and Port information
-                :type  mongo_uri: string
 
                 :param limit: Number of docs to be sampled
                 :type  limit: int
 
         """
-
-        self.db_name = db_name
-        self.collection = collection_name
+        self.collection = collection
         self.where_dict = where_dict
         self.limit = limit
-        self.mongo_uri = mongo_uri
-        self.host = host
-        self.port = port
-
-    def get_mongo_cursor(self):
-        """
-                Returns Mongo cursor using the class variables
-
-                :return: mongo collection for which cursor will be created
-                :rtype: mongo colection object
-        """
-        try:
-            if self.host:
-                if self.port:
-                    client = MongoClient(self.host, self.port)
-                else:
-                    client = MongoClient(
-                        self.host, MongoCollection.DEFAULT_PORT)
-            else:
-
-                client = MongoClient(self.mongo_uri)
-
-            db = client[self.db_name]
-            cursor = db[self.collection]
-
-            return cursor
-
-        except Exception as e:
-            msg = "Mongo Connection could not be established for Mongo Uri: {mongo_uri}, Database: {db_name}, Collection {col}, Error: {error}".format(
-                mongo_uri=self.mongo_uri, db_name=self.db_name, col=self.collection, error=str(e))
-            raise Exception(msg)
 
     def get_pretty_table(self, key_type_count, total_docs):
         """
@@ -125,8 +80,7 @@ class Schema(object):
             "other": 0,
         }
 
-        cursor = self.get_mongo_cursor()
-        mongo_collection_docs = cursor.find(
+        mongo_collection_docs = self.collection.find(
             self.where_dict).limit(self.limit)
 
         key_type_count = defaultdict(lambda: dict(key_type_default_count))

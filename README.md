@@ -9,15 +9,15 @@
 ***
 To install the package, type the following -
 
-	pip install mongoschema
+    pip install mongoschema
 
 
 ## Sample data - Populating MongoDB with sample data
 ***
 Navigate to `test/sample_data` in the `mongojoin` directory and type the following command -
 
-	> mongoimport --dbname test --collection supplier --file supplier.json
-	> mongoimport --dbname test --collection order --file order.json
+    > mongoimport --dbname test --collection supplier --file supplier.json
+    > mongoimport --dbname test --collection order --file order.json
 
 This will create and populate the required collections with sample data.
 
@@ -25,34 +25,35 @@ This will create and populate the required collections with sample data.
 The two collections *supplier* and *order* will be used to demonstrate how to use **mongoschema**.
 To check the contents of the collection, the following command can be used in the MongoDB shell :
 
-	> use test
-	> db.supplier.find({})
-	> db.order.find({})
+    > use test
+    > db.supplier.find({})
+    > db.order.find({})
 
 ## Using `mongoschema` to get the schema information of a MongoDB collections
 ***
 Type the following in Python shell to import `mongoschema`- 
 
-	>>> from mongoschema import Schema
+    >>> from mongoschema import Schema
 
 To create a `Schema` object for the collection to be analysed, type the following -
 
-	>>> schema = Schema("test", "supplier")
+    >>> from pymongo import MongoClient
+    >>> client = MongoClient()
+    >>> schema = Schema(client.test.supplier)
 
 where `test` is the DB name and `supplier` is the Collection name.
 
 
 Additional parameters -
-`host` : Mongo uri (String)
-`port` : Port Number (Integer)
-`limit`: Number of docs to be sampled
+- `filter`: Query for subset of docs to be sampled
+- `limit` : Number of docs to be sampled
 
 To get the stats of the collection -
 
-	>>> num_docs, result = schema.get_schema()
+    >>> num_docs, result = schema.get_schema()
 
-`num_docs`: Total number of docs sampled
-`result`  : Dictionary containing the stats
+- `num_docs`: Total number of docs sampled
+- `result`  : Dictionary containing the stats
 
 Use the following command to pretty print the results -
 
@@ -66,5 +67,12 @@ Use the following command to pretty print the results -
 	|     name    |        7         |         100.0         | <type 'unicode'> |         100.0         |
 	|     _id     |        7         |         100.0         |      other       |         100.0         |
 	+-------------+------------------+-----------------------+------------------+-----------------------+
+
+To print the schema of every collection in every database, type the following -
+
+    >>> for database in client.database_names():
+    >>>   for collection in client[database].collection_names():
+    >>>       print('%s.%s:' % (database, collection))
+    >>>       Schema(client[database][collection]).print_schema()
 
 More contents here - https://pypi.python.org/pypi/mongoschema/
